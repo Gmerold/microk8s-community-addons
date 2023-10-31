@@ -23,7 +23,7 @@ KUBECTL = os.path.expandvars("$SNAP/microk8s-kubectl.wrapper")
 def main(resources):
     resources = dict(resources)
     resources_list = [
-        {"resrouceName": resource_name, "selectors": {"pciAddress": [pci_address]}}
+        {"resourceName": resource_name, "selectors": {"pciAddress": [pci_address]}}
         for resource_name, pci_address in resources.items()
     ]
 
