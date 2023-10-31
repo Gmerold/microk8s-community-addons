@@ -2,13 +2,15 @@
 
 import json
 import os
-import yaml
 import subprocess
 import tempfile
 
 import click
+from pathlib import Path
+
 
 KUBECTL = os.path.expandvars("$SNAP/microk8s-kubectl.wrapper")
+SCRIPT_PATH = Path(__file__).absolute()
 
 
 @click.command()
@@ -48,7 +50,7 @@ def main(resources):
         sriovdp_config.flush()
 
         subprocess.check_call([KUBECTL, "apply", "-f", sriovdp_config.name])
-    subprocess.check_call([KUBECTL, "apply", "-f", "sriovdp.yaml"])
+    subprocess.check_call([KUBECTL, "apply", "-f", Path(f"{SCRIPT_PATH}/sriovdp.yaml")])
 
     click.echo("Enabled SRIOV device plugin.")
 
