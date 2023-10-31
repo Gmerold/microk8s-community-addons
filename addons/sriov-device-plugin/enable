@@ -23,10 +23,12 @@ SCRIPT_PATH = os.path.abspath(os.path.dirname(__file__))
 )
 def main(resources):
     resources = dict(resources)
-    resources_list = [
-        {"resourceName": resource_name, "selectors": {"pciAddress": [pci_address]}}
-        for resource_name, pci_address in resources.items()
-    ]
+    resources_list = {
+        "resourceList": [
+            {"resourceName": resource_name, "selectors": {"pciAddress": [pci_address]}}
+            for resource_name, pci_address in resources.items()
+        ]
+    }
 
     sriovdp_config_manifest = f"""apiVersion: v1
 kind: ConfigMap
