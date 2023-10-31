@@ -33,12 +33,10 @@ def main(resources):
         "kind": "ConfigMap",
         "metadata": {
             "name": "sriovdp-config",
-            "namespace": "kube-config"
+            "namespace": "kube-system"
         },
         "data": {
-            "config.json": json.dumps({
-                "resourceList": resources_list
-            })
+            "config.json": json.dumps({"resourceList": resources_list})
         }
     }
     click.echo(json.dumps(sriovdp_config_manifest))
@@ -48,9 +46,6 @@ def main(resources):
     with tempfile.NamedTemporaryFile(mode="w+") as sriovdp_config:
         json.dump(sriovdp_config_manifest, sriovdp_config)
         sriovdp_config.flush()
-        import time
-        click.echo(sriovdp_config.name)
-        time.sleep(120)
 
         subprocess.check_call([KUBECTL, "apply", "-f", sriovdp_config.name])
     subprocess.check_call([KUBECTL, "apply", "-f", "sriovdp.yaml"])
