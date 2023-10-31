@@ -37,7 +37,7 @@ def main(resources):
         },
         "data": f"{{'config.json': {{'resourceList': {resources_list}}}}}"
     }
-    click.echo(json.dumps(sriovdp_config_manifest))
+    click.echo(yaml.dump(sriovdp_config_manifest))
 
     click.echo("Enabling SRIOV device plugin...")
 
