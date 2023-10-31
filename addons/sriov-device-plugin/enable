@@ -14,10 +14,9 @@ KUBECTL = os.path.expandvars("$SNAP/microk8s-kubectl.wrapper")
 @click.option(
     "--resources",
     required=True,
-    type=dict,
     help="{\"${RESOURCE_NAME\": \"${PCI_ADDRESS}\"}"
 )
-def main(resources):
+def main(resources: dict):
     resources_list = [
         {"resrouceName": resource_name, "selectors": {"pciAddress": [pci_address]}}
         for resource_name, pci_address in resources.items()
