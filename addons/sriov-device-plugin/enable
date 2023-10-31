@@ -42,15 +42,15 @@ def main(resources):
 
     click.echo("Enabling SRIOV device plugin...")
 
-    with tempfile.NamedTemporaryFile(mode="w+") as sriovdp_config:
-        json.dump(sriovdp_config_manifest, sriovdp_config)
-        sriovdp_config.flush()
-
-        subprocess.check_call([KUBECTL, "apply", "-f", sriovdp_config.name])
+    # with tempfile.NamedTemporaryFile(mode="w+") as sriovdp_config:
+    #     json.dump(sriovdp_config_manifest, sriovdp_config)
+    #     sriovdp_config.flush()
+    #
+    #     subprocess.check_call([KUBECTL, "apply", "-f", sriovdp_config.name])
     subprocess.check_call([KUBECTL, "apply", "-f", os.path.join(SCRIPT_PATH, "sriovdp.yaml")])
 
-    click.echo("Enabled SRIOV device plugin.")
+    click.echo("SRIOV device plugin is now enabled.")
 
 
 if __name__ == "__main__":
-    main(prog_name="microk8s enable sriov-device-plugin")
+    main()
