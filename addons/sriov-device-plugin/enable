@@ -25,7 +25,12 @@ def main(resources):
     resources = dict(resources)
     resources_list = {
         "resourceList": [
-            {"resourceName": resource_name, "selectors": {"pciAddresses": [pci_address]}}
+            {
+                "resourceName": resource_name,
+                "selectors": {
+                    "pciAddresses": [pci_address]
+                }
+            }
             for resource_name, pci_address in resources.items()
         ]
     }
@@ -37,7 +42,7 @@ metadata:
   namespace: kube-system
 data:
   config.json: |
-    {resources_list}
+    {json.dumps(resources_list)}
 """
 
     click.echo("Enabling SRIOV device plugin...")
