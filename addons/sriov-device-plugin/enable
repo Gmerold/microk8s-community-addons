@@ -13,14 +13,13 @@ KUBECTL = os.path.expandvars("$SNAP/microk8s-kubectl.wrapper")
 @click.command()
 @click.option(
     "--resources",
-    type=dict,
     required=True,
     help="{\"${RESOURCE_NAME\": \"${PCI_ADDRESS}\"}"
 )
-def main(resources: dict):
+def main(resources: str):
     resources_list = [
         {"resrouceName": resource_name, "selectors": {"pciAddress": [pci_address]}}
-        for resource_name, pci_address in resources.items()
+        for resource_name, pci_address in json.loads(resources).items()
     ]
 
     sriovdp_config_manifest = {
