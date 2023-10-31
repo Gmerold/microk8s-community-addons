@@ -155,3 +155,5 @@ microk8s-addons:
       check_status: "statefulset.apps/kube-sriov-device-plugin-amd64"
       supported_architectures:
         - amd64
+        - arm64
+        - ppc64le
