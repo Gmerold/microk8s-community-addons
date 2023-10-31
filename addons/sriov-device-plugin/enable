@@ -50,4 +50,4 @@ def main(resources):
 
 
 if __name__ == "__main__":
-    main(prog_name="microk8s enable sriov-device")
+    main(prog_name="microk8s enable sriov-device-plugin")

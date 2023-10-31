@@ -149,7 +149,7 @@ microk8s-addons:
         - amd64
         - arm64
 
-    - name: "sriov-device"
+    - name: "sriov-device-plugin"
       description: "SRIOV device plugin."
       version: "3.3"
       check_status: "statefulset.apps/kube-sriov-device-plugin-amd64"
