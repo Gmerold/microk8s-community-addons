@@ -28,25 +28,23 @@ def main(resources):
         for resource_name, pci_address in resources.items()
     ]
 
-    sriovdp_config_manifest = {
-        "apiVersion": "v1",
-        "kind": "ConfigMap",
-        "metadata": {
-            "name": "sriovdp-config",
-            "namespace": "kube-system"
-        },
-        "data": {
-            "config.json": json.dumps({"resourceList": resources_list})
-        }
-    }
+    sriovdp_config_manifest = f"""apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sriovdp-config
+  namespace: kube-system
+data:
+  config.json: |
+    {resources_list}
+"""
 
     click.echo("Enabling SRIOV device plugin...")
 
-    # with tempfile.NamedTemporaryFile(mode="w+") as sriovdp_config:
-    #     json.dump(sriovdp_config_manifest, sriovdp_config)
-    #     sriovdp_config.flush()
-    #
-    #     subprocess.check_call([KUBECTL, "apply", "-f", sriovdp_config.name])
+    with tempfile.NamedTemporaryFile(mode="w+") as sriovdp_config:
+        sriovdp_config.write(sriovdp_config_manifest)
+        sriovdp_config.flush()
+
+        subprocess.check_call([KUBECTL, "apply", "-f", sriovdp_config.name])
     subprocess.check_call([KUBECTL, "apply", "-f", os.path.join(SCRIPT_PATH, "sriovdp.yaml")])
 
     click.echo("SRIOV device plugin is now enabled.")
