@@ -35,13 +35,9 @@ def main(resources):
             "name": "sriovdp-config",
             "namespace": "kube-config"
         },
-        "data": {
-            "config.json": {
-                "resourceList": f"{resources_list}"
-            }
-        }
+        "data": f"{'config.json': {'resourceList': {resources_list}}}"
     }
-    click.echo(yaml.dump(sriovdp_config_manifest))
+    click.echo(json.dumps(sriovdp_config_manifest))
 
     click.echo("Enabling SRIOV device plugin...")
 
