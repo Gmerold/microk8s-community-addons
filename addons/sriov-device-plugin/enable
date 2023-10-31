@@ -40,6 +40,7 @@ def main(resources):
             }
         }
     }
+    click.echo(sriovdp_config_manifest)
 
     click.echo("Enabling SRIOV device plugin...")
 
