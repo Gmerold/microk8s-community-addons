@@ -36,7 +36,7 @@ def main(resources):
         },
         "data": {
             "config.json": {
-                "resourceList": json.dumps(resources_list)
+                "resourceList": resources_list
             }
         }
     }
