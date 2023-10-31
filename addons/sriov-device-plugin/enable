@@ -35,7 +35,7 @@ def main(resources):
             "name": "sriovdp-config",
             "namespace": "kube-config"
         },
-        "data": f"{'config.json': {'resourceList': {resources_list}}}"
+        "data": f"{{'config.json': {{'resourceList': {resources_list}}}}}"
     }
     click.echo(json.dumps(sriovdp_config_manifest))
 
