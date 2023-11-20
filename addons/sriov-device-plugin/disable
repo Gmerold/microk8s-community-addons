@@ -13,9 +13,11 @@ SCRIPT_PATH = os.path.abspath(os.path.dirname(__file__))
 
 
 def main():
-    click.echo("Removing SRIOV device plugin...")
+    click.echo("Disabling SR-IOV Network Device Plugin...")
 
     subprocess.check_call([KUBECTL, "delete", "-f", os.path.join(SCRIPT_PATH, "sriovdp.yaml")])
+
+    click.echo("SR-IOV Network Device Plugin is now disabled.")
 
 
 if __name__ == "__main__":

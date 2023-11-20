@@ -14,25 +14,26 @@ SCRIPT_PATH = os.path.abspath(os.path.dirname(__file__))
 
 @click.command()
 @click.option(
-    "--resource",
+    "--resources",
     "-r",
     "resources",
     required=True,
-    type=(str, str),
-    multiple=True,
-    help="{\"${RESOURCE_NAME\": \"${PCI_ADDRESS}\"}"
+    type=str,
+    multiple=False,
+    help="JSON-like string mapping resource name to the list of PCI addresses.\nExample:\n"
+         "'{\"sriov_vfio_res_A\": [\"0000:00:06.0\"], \"sriov_vfio_res_B\": [\"0000:00:07.0\"]}'",
 )
 def main(resources):
-    resources = dict(resources)
+    resources = json.loads(resources)
     resources_list = {
         "resourceList": [
             {
                 "resourceName": resource_name,
                 "selectors": {
-                    "pciAddresses": [pci_address]
+                    "pciAddresses": pci_addresses
                 }
             }
-            for resource_name, pci_address in resources.items()
+            for resource_name, pci_addresses in resources.items()
         ]
     }
 
@@ -46,7 +47,7 @@ data:
     {json.dumps(resources_list)}
 """
 
-    click.echo("Enabling SRIOV device plugin...")
+    click.echo("Enabling SR-IOV Network Device Plugin...")
 
     with tempfile.NamedTemporaryFile(mode="w+") as sriovdp_config:
         sriovdp_config.write(sriovdp_config_manifest)
@@ -58,17 +59,23 @@ data:
     now = time.time()
     timeout = 300
     while time.time() - now <= timeout:
-        allocatable_resources = subprocess.check_output(
+        node_details = subprocess.check_output(
             [KUBECTL, "get", "node", "-o", "json"]
         ).decode("utf-8")
-        if not all(resource in allocatable_resources for resource, _ in resources.items()):
-            click.echo("Waiting for SRIOV device plugin to be ready...")
+        allocatable_resources = json.loads(node_details).get("items")[0].get("status").get(
+            "allocatable"
+        )
+        if not all(
+            allocatable_resources[f"intel.com/{resource}"] == str(len(pci_addresses))
+            for resource, pci_addresses in resources.items()
+        ):
+            click.echo("Waiting for SR-IOV Network Device Plugin to be ready...")
             time.sleep(5)
         else:
-            click.echo("SRIOV device plugin is now enabled.")
+            click.echo("SR-IOV Network Device Plugin is now enabled.")
             return
 
-    raise TimeoutError("Unable to start SRIOV plugin. Operation timed out!")
+    raise TimeoutError("Unable to start SR-IOV Network Device Plugin. Operation timed out!")
 
 
 if __name__ == "__main__":

@@ -1,41 +1,32 @@
-import pytest
+import json
 import os
 import platform
-import sh
-import yaml
+import pytest
 
 from validators import (
-    validate_dns_dashboard,
-    validate_dashboard_ingress,
-    validate_storage,
-    validate_storage_nfs,
-    validate_ingress,
     validate_ambassador,
-    validate_gpu,
-    validate_istio,
-    validate_knative,
-    validate_registry,
-    validate_forward,
-    validate_metrics_server,
+    validate_argocd,
+    validate_cilium,
+    validate_coredns_config,
+    validate_dashboard_ingress,
+    validate_dns_dashboard,
     validate_fluentd,
     validate_inaccel,
+    validate_ingress,
     validate_jaeger,
-    validate_keda,
-    validate_linkerd,
-    validate_rbac,
-    validate_cilium,
-    validate_multus,
-    validate_metallb_config,
-    validate_prometheus,
-    validate_traefik,
-    validate_coredns_config,
-    validate_portainer,
-    validate_openfaas,
-    validate_openebs,
     validate_kata,
-    validate_starboard,
-    validate_argocd,
+    validate_keda,
+    validate_knative,
+    validate_linkerd,
+    validate_multus,
+    validate_openebs,
+    validate_openfaas,
     validate_osm_edge,
+    validate_portainer,
+    validate_sriov_device_plugin,
+    validate_starboard,
+    validate_storage_nfs,
+    validate_traefik,
 )
 from utils import (
     microk8s_enable,
@@ -45,7 +36,7 @@ from utils import (
     microk8s_reset,
     is_container,
 )
-from subprocess import PIPE, STDOUT, CalledProcessError, check_call, run, check_output
+from subprocess import PIPE, STDOUT, CalledProcessError, run, check_output
 
 
 class TestAddons(object):
@@ -318,6 +309,36 @@ class TestAddons(object):
         validate_portainer()
         print("Disabling Portainer")
         microk8s_disable("portainer")
+
+    @pytest.mark.skipif(
+        platform.machine() != "x86_64",
+        reason="SR-IOV Network Device Plugin tests are only relevant in x86 architectures",
+        )
+    def test_sriov_device_plugin(self):
+        """
+        Sets up and validates SR-IOV Network Device Plugin.
+        """
+        expected_resources = {
+            "sriov_vfio_res_A": ["0000:00:06.0"],
+            "sriov_vfio_res_B": ["0000:00:07.0"],
+        }
+        enable_sriov_dp_cmd = [
+            "/snap/bin/microk8s.enable",
+            "sriov-device-plugin",
+            "--resources",
+            json.dumps(expected_resources),
+        ]
+        print("Enabling SR-IOV Network Device Plugin")
+        run(
+            enable_sriov_dp_cmd,
+            stdout=PIPE,
+            input=b"N\n",
+            stderr=STDOUT,
+            check=True,
+        )
+        assert validate_sriov_device_plugin(expected_resources)
+        print("Disabling SR-IOV Network Device Plugin")
+        microk8s_disable("sriov-device-plugin")
 
     @pytest.mark.skipif(
         platform.machine() != "x86_64",
