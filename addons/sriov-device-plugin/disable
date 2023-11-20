@@ -1,2 +1,22 @@
 #!/usr/bin/env python3
 
+import json
+import os
+import subprocess
+import time
+import tempfile
+
+import click
+
+KUBECTL = os.path.expandvars("$SNAP/microk8s-kubectl.wrapper")
+SCRIPT_PATH = os.path.abspath(os.path.dirname(__file__))
+
+
+def main():
+    click.echo("Removing SRIOV device plugin...")
+
+    subprocess.check_call([KUBECTL, "delete", "-f", os.path.join(SCRIPT_PATH, "sriovdp.yaml")])
+
+
+if __name__ == "__main__":
+    main()

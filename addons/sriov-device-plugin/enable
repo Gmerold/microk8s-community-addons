@@ -3,6 +3,7 @@
 import json
 import os
 import subprocess
+import time
 import tempfile
 
 import click
@@ -54,7 +55,20 @@ data:
         subprocess.check_call([KUBECTL, "apply", "-f", sriovdp_config.name])
     subprocess.check_call([KUBECTL, "apply", "-f", os.path.join(SCRIPT_PATH, "sriovdp.yaml")])
 
-    click.echo("SRIOV device plugin is now enabled.")
+    now = time.time()
+    timeout = 300
+    while time.time() - now <= timeout:
+        allocatable_resources = subprocess.check_output(
+            [KUBECTL, "get", "node", "-o", "json"]
+        ).decode("utf-8")
+        if not all(resource in allocatable_resources for resource, _ in resources.items()):
+            click.echo("Waiting for SRIOV device plugin to be ready...")
+            time.sleep(5)
+        else:
+            click.echo("SRIOV device plugin is now enabled.")
+            return
+
+    raise TimeoutError("Unable to start SRIOV plugin. Operation timed out!")
 
 
 if __name__ == "__main__":
