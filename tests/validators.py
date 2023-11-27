@@ -1,4 +1,3 @@
-import json
 import os
 import platform
 import re
@@ -695,20 +694,3 @@ def validate_osm_edge():
         timeout_insec=300,
     )
     print("osm-edge proxy injector up and running.")
-
-
-def validate_sriov_device_plugin(expected_resources: dict):
-    """Validate SR-IOV Network Device Plugin.
-
-    Args:
-        expected_resources (dict): Dictionary of expected resources and their quantity
-    """
-    wait_for_installation()
-    node_details = kubectl("get node -o json")
-    allocatable_resources = json.loads(node_details).get("items")[0].get("status").get(
-        "allocatable"
-    )
-    return all(
-        allocatable_resources[resource] == str(quantity)
-        for resource, quantity in expected_resources.items()
-    )

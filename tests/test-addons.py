@@ -2,6 +2,7 @@ import json
 import os
 import platform
 import pytest
+import tempfile
 
 from validators import (
     validate_ambassador,
@@ -318,16 +319,32 @@ class TestAddons(object):
         """
         Sets up and validates SR-IOV Network Device Plugin.
         """
-        expected_resources = {
+        SCRIPT_PATH = os.path.abspath(os.path.dirname(__file__))
+        test_sriov_resources_mapping = {
             "sriov_vfio_res_A": ["0000:00:06.0"],
             "sriov_vfio_res_B": ["0000:00:07.0"],
         }
-        enable_sriov_dp_cmd = f"/snap/bin/microk8s.enable sriov-device-plugin --resources '{json.dumps(expected_resources)}'".split()
-        print("Enabling SR-IOV Network Device Plugin")
-        check_output(f"/snap/bin/microk8s.enable sriov-device-plugin --resources '{json.dumps(expected_resources)}'", shell=True)
-        assert validate_sriov_device_plugin(expected_resources)
-        print("Disabling SR-IOV Network Device Plugin")
-        microk8s_disable("sriov-device-plugin")
+        with open(mode="w+") as sriov_resources_mapping_file:
+            sriov_resources_mapping_file.write(json.dumps(test_sriov_resources_mapping))
+            sriov_resources_mapping_file.flush()
+
+            enable_sriov_dp_cmd = [
+                "/snap/bin/microk8s.enable",
+                "sriov-device-plugin",
+                "--resources-file",
+                sriov_resources_mapping_file.name
+            ]
+            print("Enabling SR-IOV Network Device Plugin")
+            run(
+                enable_sriov_dp_cmd,
+                stdout=PIPE,
+                input=b"N\n",
+                stderr=STDOUT,
+                check=True,
+            )
+            assert validate_sriov_device_plugin(test_sriov_resources_mapping)
+            print("Disabling SR-IOV Network Device Plugin")
+            microk8s_disable("sriov-device-plugin")
 
     # @pytest.mark.skipif(
     #     platform.machine() != "x86_64",
