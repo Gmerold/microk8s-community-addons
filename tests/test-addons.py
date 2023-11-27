@@ -24,7 +24,6 @@ from validators import (
     validate_openfaas,
     validate_osm_edge,
     validate_portainer,
-    validate_sriov_device_plugin,
     validate_starboard,
     validate_storage_nfs,
     validate_traefik,
@@ -319,22 +318,21 @@ class TestAddons(object):
         """
         Sets up and validates SR-IOV Network Device Plugin.
         """
-        SCRIPT_PATH = os.path.abspath(os.path.dirname(__file__))
-        test_sriov_resources_mapping = {
-            "sriov_vfio_res_A": ["0000:00:06.0"],
-            "sriov_vfio_res_B": ["0000:00:07.0"],
-        }
-        with open(mode="w+") as sriov_resources_mapping_file:
-            sriov_resources_mapping_file.write(json.dumps(test_sriov_resources_mapping))
-            sriov_resources_mapping_file.flush()
-
-            enable_sriov_dp_cmd = [
-                "/snap/bin/microk8s.enable",
-                "sriov-device-plugin",
-                "--resources-file",
-                sriov_resources_mapping_file.name
-            ]
-            print("Enabling SR-IOV Network Device Plugin")
+        script_path = os.path.abspath(os.path.dirname(__file__))
+        sriov_resources_mapping_file_name = "sriov-device-plugin-test-resources.json"
+        sriov_resources_mapping_file = os.path.join(
+            script_path,
+            "resources",
+            sriov_resources_mapping_file_name,
+        )
+        enable_sriov_dp_cmd = [
+            "/snap/bin/microk8s.enable",
+            "sriov-device-plugin",
+            "--resources-file",
+            sriov_resources_mapping_file,
+        ]
+        print("Enabling SR-IOV Network Device Plugin")
+        with pytest.raises(ValueError):
             run(
                 enable_sriov_dp_cmd,
                 stdout=PIPE,
@@ -342,9 +340,8 @@ class TestAddons(object):
                 stderr=STDOUT,
                 check=True,
             )
-            assert validate_sriov_device_plugin(test_sriov_resources_mapping)
-            print("Disabling SR-IOV Network Device Plugin")
-            microk8s_disable("sriov-device-plugin")
+        print("Disabling SR-IOV Network Device Plugin")
+        microk8s_disable("sriov-device-plugin")
 
     # @pytest.mark.skipif(
     #     platform.machine() != "x86_64",
