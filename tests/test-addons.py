@@ -314,6 +314,10 @@ class TestAddons(object):
         platform.machine() != "x86_64",
         reason="SR-IOV Network Device Plugin tests are only relevant in x86 architectures",
         )
+    @pytest.mark.skipif(
+        os.environ.get("STRICT") == "yes",
+        reason="Skipping sriov-device-plugin tests in strict confinement as they are expected to fail",  # noqa: E501
+    )
     def test_sriov_device_plugin(self):
         """
         Sets up and validates SR-IOV Network Device Plugin.
@@ -332,14 +336,17 @@ class TestAddons(object):
             sriov_resources_mapping_file,
         ]
         print("Enabling SR-IOV Network Device Plugin")
-        with pytest.raises(ValueError):
-            run(
+        try:
+            cmd = run(
                 enable_sriov_dp_cmd,
                 stdout=PIPE,
                 input=b"N\n",
                 stderr=STDOUT,
                 check=True,
             )
+            assert "ValueError: Invalid device PCI address!" in cmd.stderr.decode()
+        except CalledProcessError:
+            pass
         print("Disabling SR-IOV Network Device Plugin")
         microk8s_disable("sriov-device-plugin")
 

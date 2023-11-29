@@ -4,11 +4,13 @@ import argparse
 import json
 import os
 import subprocess
+import sys
 import time
 import tempfile
 
 KUBECTL = os.path.expandvars("$SNAP/microk8s-kubectl.wrapper")
 SCRIPT_PATH = os.path.abspath(os.path.dirname(__file__))
+sys.tracebacklimit = 0
 
 
 def main():
@@ -18,7 +20,7 @@ def main():
         "--resources-file",
         dest="resources_file",
         required=True,
-        help="Path to JSON file which contains resources mappings, i.e.\n"
+        help="Path to JSON file which contains SR-IOV resources mappings, i.e.\n"
              "{\"RESOURCE_NAME\": [\"DEVICE_PCI_ADDRESS\"]}",
     )
     args = parser.parse_args()
@@ -41,16 +43,15 @@ def main():
     )
 
 
-def _generate_resources_dict_from_args(args: argparse.Namespace) -> dict:
-    """"""
-    resources = {}
-    for resource in args.resource:
-        resources.update(json.loads(resource))
-    return resources
-
-
 def _pci_addresses_are_valid(resources: dict) -> bool:
-    """"""
+    """Checks whether device PCI addresses given in the config are valid.
+
+    Args:
+        resources (dict): SR-IOV resources mappings
+
+    Returns:
+        bool: True if all given PCI addresses are valid
+    """
     for _, pci_addresses in resources.items():
         for pci_address in pci_addresses:
             if not _pci_address_is_valid(pci_address):
@@ -59,7 +60,14 @@ def _pci_addresses_are_valid(resources: dict) -> bool:
 
 
 def _pci_address_is_valid(pci_address: str) -> bool:
-    """"""
+    """Checks whether given device PCI address is valid.
+
+    Args:
+        pci_address (str): Device PCI address
+
+    Returns:
+        bool: True if given PCI address is valid
+    """
     get_pci_device_cmd = ["lspci", "-s", pci_address]
     if subprocess.check_output(get_pci_device_cmd):
         return True
@@ -67,7 +75,14 @@ def _pci_address_is_valid(pci_address: str) -> bool:
 
 
 def _get_sriovdp_config_manifest(resources: dict) -> str:
-    """"""
+    """Generates a ConfigMap for SR-IOV Network Device Plugin.
+
+    Args:
+        resources (dict): SR-IOV resources mappings
+
+    Returns:
+        str: ConfigMap for SR-IOV Network Device Plugin
+    """
     resources_list = {
         "resourceList": [
             {
@@ -92,6 +107,11 @@ data:
 
 
 def _create_sriovdp_config(sriovdp_config_manifest: str) -> None:
+    """Creates SR-IOV Network Device Plugin's config in Kubernetes.
+
+    Args:
+        sriovdp_config_manifest (str): ConfigMap for SR-IOV Network Device Plugin
+    """
     with tempfile.NamedTemporaryFile(mode="w+") as sriovdp_config:
         sriovdp_config.write(sriovdp_config_manifest)
         sriovdp_config.flush()
@@ -100,6 +120,11 @@ def _create_sriovdp_config(sriovdp_config_manifest: str) -> None:
 
 
 def _enable_sriovdp(resources: dict) -> None:
+    """Enables SR-IOV Network Device Plugin in Kubernetes.
+
+    Args:
+        resources (dict): SR-IOV resources mappings
+    """
     subprocess.check_call([KUBECTL, "apply", "-f", os.path.join(SCRIPT_PATH, "sriovdp.yaml")])
 
     now = time.time()
@@ -121,6 +146,11 @@ def _enable_sriovdp(resources: dict) -> None:
 
 
 def _get_sriov_allocatable_resources() -> dict:
+    """Returns allocatable resources of a Kubernetes cluster.
+
+    Returns:
+        dict: Kubernetes allocatable resources
+    """
     node_details = subprocess.check_output(
         [KUBECTL, "get", "node", "-o", "json"]
     ).decode("utf-8")
